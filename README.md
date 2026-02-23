@@ -1,117 +1,123 @@
-# Reinforcement learning in portfolio management
+# XDRL for Finance
+### Explainable Deep Reinforcement Learning for Portfolio Management
 
-## Introduction
+This repository contains the code and data for my project on **explainable post hoc portfolio management with Deep Reinforcement Learning (DRL)**.
 
-Motivated by "A Deep Reinforcement Learning Framework for the Financial Portfolio Management Problem" by [Jiang et. al. 2017](https://arxiv.org/abs/1706.10059) [1]. In this project:
-+ Implement two state-of-art continous deep reinforcement learning algorithms, Deep Deterministic Policy Gradient (DDPG) and Proximal Policy Optimization(PPO) in portfolio management. 
-+ Experiments on different settings, such as changing learning rates, optimizers, neutral network structures, China/America Stock data, initializers, noise, features to figure out their influence on the RL agents' performance(cumulative return).
-## Using the environment
+The project extends a PPO-based portfolio management framework by integrating **post hoc explainability techniques** to make the agent’s decisions interpretable in trading time:
+- **Feature Importance**
+- **SHAP**
+- **LIME**
 
-The environment provides supports for easily testing different reinforcement learning in portfolio management.
-+ main.py -  the entrance to run our training and testing framework
-+ ./saved_network- contains different saved models after training, with DDPG and PPO sub folders
-+ ./summary- contains summaries, also with DDPG and PPO sub folder
-+ ./agent- contains ddpg.py, ppo.py and ornstein_uhlenbeck.py(the noise we add to agent's actions during training)
-+ ./data- contains America.csv for USA stock data, China.csv for China stock data. download_data.py can download China stock data by Tushare. environment.py generates states data for trading agents.
-+ config.json- the configuration file for training or testing settings:
-```
-{
-	"data":{
-		"start_date":"2015-01-01",
-		"end_date":"2018-01-01",
-		"market_types":["stock"],
-		"ktype":"D"
-	},
-	"session":{
-		"start_date":"2015-01-05",
-		"end_date":"2017-01-01",
-		"market_types":"America",
-	    "codes":["AAPL","ADBE","BABA","SNE","V"],
-		"features":["close"],
-		"agents":["CNN","DDPG","3"],
-		"epochs":"10000",
-		"noise_flag":"False",
-		"record_flag":"False",
-		"plot_flag":"False",
-		"reload_flag":"False",
-		"trainable":"True",
-		"method":"model_free"
-	}
-}
-```
+The goal is not only to build a DRL agent that allocates portfolio weights, but also to understand **why** it makes each decision.
 
-Download stock data in shenzhen and shanghai stock market in the given period in Day(D) frequency. Options: hours, minutes
-```
-python main.py --mode=download_data
-```
-Training/Testing
-```
-python main.py --mode=train
-```
+---
 
-```
-python main.py --mode=test
-```
-+ noise_flag=True: actions produced by RL agents are distorted by adding UO noise.
-+ record_flag=True: trading details would be stored as a csv file named by the epoch and cumulative return each epoch.
-+ plot_flag=True: the trend of wealth would be plot each epoch.
-+ reload_flag=True: tensorflow would search latest saved model in ./saved_network and reload.
-+ trainable=True: parameters would be updated during each epoch.
-+ method=model_based: the first epochs our agents would try to imitate a greedy strategy to quickly improve its performance. Then it would leave it and continue to self-improve by model-free reinforcement learning.
+## Publication
 
-## Result
-+ Training data (USA)
-  ![USA](result/USA.png)
-+ Training data (China)
-  ![China](result/China.png)
+This repository supports the open-access paper:
 
-+ Backtest (USA)
-  ![backtest_USA](result/backtest_USA.png)
+**de-la-Rica-Escudero, A., Garrido-Merchán, E. C., & Coronado-Vaca, M. (2025)**  
+*Explainable post hoc portfolio management financial policy of a Deep Reinforcement Learning agent*  
+**PLOS ONE, 20(1), e0315528**  
+DOI: https://doi.org/10.1371/journal.pone.0315528
 
-+ APV under different feature combinations
-  ![features_reward](result/features_reward.png)
+---
 
-**The other results can be found in our report.**(https://arxiv.org/abs/1808.09940).
+## Project Overview
 
+### Motivation
+Deep Reinforcement Learning has shown strong performance in portfolio management, especially in volatile markets. However, DRL models are often black boxes, which makes them difficult to trust in financial decision-making.
 
+This project addresses that limitation by adding **explainability at prediction time** (not only during training), so users can inspect the agent’s behavior and assess whether its decisions align with an investment policy.
 
+### Main Contribution
+- A **PPO-based DRL portfolio management agent**
+- A **post hoc explainability layer** for portfolio allocation decisions
+- Explanations at both:
+  - **Global level** (feature importance)
+  - **Local level / per prediction** (SHAP and LIME)
 
+---
 
-## Contribution
+## Dataset and Experimental Setup
 
-### Contributors
+The experiments use a portfolio of **5 large-cap US technology-related stocks**:
+- AAPL (Apple)
+- ADBE (Adobe)
+- BABA (Alibaba)
+- SNE (Sony)
+- V (Visa)
 
-* ***Zhipeng Liang***
-* ***Kangkang Jiang***
-* ***Hao Chen***
-* ***Junhao Zhu***
-* ***Yanran Li***
-### Institutions
+### Data sources
+- Investing.com
+- Wind
+- Shinging-Midas Private Fund
 
-+ ***AI&FintechLab of Likelihood Technology***
-+ ***Sun Yat-sen University***
+### Features
+For each asset, the state includes daily:
+- **Open**
+- **High**
+- **Low**
+- **Close**
 
-## Acknowledegment
+This results in a **20-feature state space** (5 assets × 4 OHLC features), plus the portfolio allocation setting (including cash in the output allocation).
 
-We would like to say thanks to ***Mingwen Liu*** from ***ShingingMidas Private Fund***, ***Zheng Xie*** and ***Xingyu Fu*** from ***Sun Yat-sen University*** for their generous guidance throughout the project.
+### Time split
+- **Training:** 2015-01-01 to 2016-12-31
+- **Testing / Trading:** 2017-01-01 to 2018-01-01
 
-## Set up
+---
 
-Python Version
+## Methodology
 
-+ ***3.6***
+### 1) DRL Portfolio Allocation (PPO)
+The agent is trained with **Proximal Policy Optimization (PPO)** to learn portfolio weights over time by interacting with a financial environment.
 
-Modules needed
+### 2) Post hoc Explainability
+After training, the project stores state-action pairs and applies explainability methods to interpret the model’s decisions:
 
-+ ***tensorflow(tensorflow-gpu)***
-+ ***numpy*** 
-+ ***pandas*** 
-+ ***matplotlib***
+- **Feature Importance**  
+  Identifies which market inputs are most influential overall.
 
-## Contact
+- **SHAP**  
+  Explains the contribution of each feature to a specific portfolio weight prediction.
 
-+ liangzhp6@mail2.sysu.edu.cn
-+ jiangkk3@mail2.sysu.edu.cn
-+ chenhao348@mail2.sysu.edu.cn
-+ zhujh25@mail2.sysu.edu.cn
-+ liyr8@mail2.sysu.edu.cn
+- **LIME**  
+  Provides local, instance-level explanations for the allocation decision at a given time step.
+
+### 3) Explainability Robustness
+The project also evaluates the stability of explanations (e.g., Shapley values) across multiple runs and seeds.
+
+---
+
+## Repository Structure
+
+> **Note:** This repository was originally built on top of an existing DRL portfolio management framework and adapted for explainability experiments.
+
+A typical structure is:
+
+- `main.py` — entry point for training, testing, and data workflows
+- `agent/` — PPO agent implementation and RL utilities
+- `data/` — input datasets (OHLC market data)
+- `saved_network/` — trained model checkpoints
+- `summary/` — logs, metrics, and experiment summaries
+- `environment.py` — portfolio environment and state construction
+- `config.json` — experiment configuration
+- `explainability/` *(if present in your local version)* — SHAP/LIME/feature importance scripts and outputs
+- `results/` *(if present)* — plots and explainability visualizations used in the paper
+
+---
+
+## Installation
+
+### Python version
+Recommended:
+- **Python 3.9+** (works with modern explainability libraries)
+
+### Core dependencies
+Install the main packages (adjust versions to your environment):
+
+```bash
+pip install numpy pandas matplotlib scikit-learn
+pip install tensorflow
+pip install shap lime
